@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getPostBySlug, getAllSlugs } from "@/lib/posts";
 import { notFound } from "next/navigation";
 
@@ -12,6 +13,8 @@ export default async function PostPage({
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) notFound();
+
+  const hasCover = !!post.coverImage;
 
   return (
     <main className="max-w-2xl mx-auto px-6 py-12">
@@ -45,9 +48,22 @@ export default async function PostPage({
         </div>
       </header>
 
-      {/* Cover placeholder */}
-      <div className="aspect-[16/9] rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 flex items-center justify-center mb-10">
-        <span className="text-7xl">📸</span>
+      {/* Cover image - use coverImage or first image from content */}
+      <div className="aspect-[16/9] rounded-xl overflow-hidden mb-10 relative">
+        {hasCover ? (
+          <Image
+            src={post.coverImage}
+            alt={post.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 672px) 100vw, 672px"
+            priority
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 flex items-center justify-center">
+            <span className="text-7xl">📸</span>
+          </div>
+        )}
       </div>
 
       {/* Content - rendered from Markdown HTML */}

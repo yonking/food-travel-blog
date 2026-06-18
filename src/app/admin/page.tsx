@@ -352,6 +352,45 @@ export default function AdminPage() {
                 />
               </div>
 
+              {/* Cover Image */}
+              <div>
+                <label className="block text-xs font-medium text-zinc-500 mb-1">封面图</label>
+                <div className="flex items-center gap-3">
+                  {current.coverImage ? (
+                    <div className="relative w-40 h-24 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 flex-shrink-0">
+                      <img
+                        src={current.coverImage}
+                        alt="封面"
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCurrent({ ...current, coverImage: "" })}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white text-xs flex items-center justify-center hover:bg-black/80"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-40 h-24 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs text-zinc-400">自动取首图</span>
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={current.coverImage}
+                      onChange={(e) => setCurrent({ ...current, coverImage: e.target.value })}
+                      placeholder="留空则自动取正文第一张图"
+                      className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    />
+                    <p className="text-xs text-zinc-400">
+                      {current.coverImage ? "已手动指定封面图" : "在正文图片上点「设为封面」可快速设置"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Image upload + Content */}
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -376,6 +415,38 @@ export default function AdminPage() {
                   rows={20}
                   className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm font-mono leading-relaxed focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-y"
                 />
+                {/* Image list below editor for quick cover set */}
+                {extractImages(current.content).length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-zinc-500 mb-2">正文图片（点击设为封面）：</p>
+                    <div className="flex flex-wrap gap-2">
+                      {extractImages(current.content).map((img, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setCurrent({ ...current, coverImage: img.url })}
+                          className={`relative w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                            current.coverImage === img.url
+                              ? "border-orange-500 ring-2 ring-orange-200"
+                              : "border-zinc-200 dark:border-zinc-700 hover:border-orange-300"
+                          }`}
+                          title={`设为封面: ${img.alt || img.url}`}
+                        >
+                          <img
+                            src={img.url}
+                            alt={img.alt}
+                            className="w-full h-full object-cover"
+                          />
+                          {current.coverImage === img.url && (
+                            <div className="absolute inset-0 bg-orange-500/20 flex items-center justify-center">
+                              <span className="text-white text-xs font-bold drop-shadow">✓ 封面</span>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -425,6 +496,17 @@ export default function AdminPage() {
       </main>
     </div>
   );
+}
+
+// Extract all images from markdown content
+function extractImages(md: string): { alt: string; url: string }[] {
+  const regex = /!\[(.*?)\]\((.+?)\)/g;
+  const images: { alt: string; url: string }[] = [];
+  let match;
+  while ((match = regex.exec(md)) !== null) {
+    images.push({ alt: match[1], url: match[2] });
+  }
+  return images;
 }
 
 // Simple client-side markdown for preview (doesn't need remark)

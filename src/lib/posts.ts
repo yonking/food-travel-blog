@@ -20,6 +20,13 @@ export interface Post extends PostMeta {
   contentHtml: string;
 }
 
+/** Extract the first image URL from markdown content */
+function extractFirstImage(content: string): string {
+  // Match ![alt](url) pattern
+  const match = content.match(/!\[.*?\]\((.+?)\)/);
+  return match ? match[1] : "";
+}
+
 export function getAllPosts(): PostMeta[] {
   const fileNames = fs.readdirSync(postsDirectory);
   const posts = fileNames
@@ -28,14 +35,16 @@ export function getAllPosts(): PostMeta[] {
       const slug = fileName.replace(/\.md$/, "");
       const fullPath = path.join(postsDirectory, fileName);
       const fileContents = fs.readFileSync(fullPath, "utf8");
-      const { data } = matter(fileContents);
+      const { data, content } = matter(fileContents);
+      // Use coverImage from frontmatter, fallback to first image in content
+      const coverImage = data.coverImage || extractFirstImage(content) || "";
       return {
         slug,
         title: data.title || "",
         date: data.date || "",
         location: data.location || "",
         excerpt: data.excerpt || "",
-        coverImage: data.coverImage || "",
+        coverImage,
         tags: data.tags || [],
       };
     });
@@ -52,13 +61,16 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   const processed = await remark().use(html).process(content);
   const contentHtml = processed.toString();
 
+  // Use coverImage from frontmatter, fallback to first image in content
+  const coverImage = data.coverImage || extractFirstImage(content) || "";
+
   return {
     slug,
     title: data.title || "",
     date: data.date || "",
     location: data.location || "",
     excerpt: data.excerpt || "",
-    coverImage: data.coverImage || "",
+    coverImage,
     tags: data.tags || [],
     contentHtml,
   };
