@@ -22,7 +22,7 @@ export default function About() {
             旅行足迹 🗺️
           </h3>
           <div className="flex flex-wrap gap-2">
-            {["成都", "大阪", "广州", "更多城市待解锁..."].map((city) => (
+            {["衢州", "嵊州", "金华", "更多城市待解锁..."].map((city) => (
               <span
                 key={city}
                 className="px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 text-sm"
