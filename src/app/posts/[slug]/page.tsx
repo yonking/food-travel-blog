@@ -2,9 +2,7 @@ import Link from "next/link";
 import { getPostBySlug, getAllSlugs } from "@/lib/posts";
 import { notFound } from "next/navigation";
 
-export function generateStaticParams() {
-  return getAllSlugs().map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function PostPage({
   params,

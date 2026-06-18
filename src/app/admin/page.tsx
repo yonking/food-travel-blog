@@ -65,8 +65,16 @@ export default function AdminPage() {
         .map((t) => t.trim())
         .filter(Boolean);
 
-      // Auto-generate slug from title if empty
-      const slug = current.slug || current.title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, "-").replace(/^-|-$/g, "");
+      // Auto-generate slug from title if empty (english only, use timestamp for Chinese titles)
+      let slug = current.slug;
+      if (!slug) {
+        const hasChinese = /[\u4e00-\u9fff]/.test(current.title);
+        if (hasChinese) {
+          slug = `post-${Date.now()}`;
+        } else {
+          slug = current.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        }
+      }
 
       const body = { ...current, slug, tags };
 
