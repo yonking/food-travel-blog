@@ -1,4 +1,12 @@
-export interface Post {
+import fs from "fs";
+import path from "path";
+import matter from "gray-matter";
+import { remark } from "remark";
+import html from "remark-html";
+
+const postsDirectory = path.join(process.cwd(), "content/posts");
+
+export interface PostMeta {
   slug: string;
   title: string;
   date: string;
@@ -6,97 +14,57 @@ export interface Post {
   excerpt: string;
   coverImage: string;
   tags: string[];
-  content: string;
 }
 
-const posts: Post[] = [
-  {
-    slug: "chengdu-spice-journey",
-    title: "成都寻味之旅：麻辣之间的温柔",
-    date: "2026-05-20",
-    location: "成都",
-    excerpt:
-      "从宽窄巷子到玉林路，每一口都是对味蕾的极致挑战。火锅的热辣、串串的鲜香、甜水面的温柔，成都用味道告诉你什么是生活的烟火气。",
-    coverImage: "/images/chengdu.jpg",
-    tags: ["火锅", "串串", "川菜"],
-    content: `## Day 1：宽窄巷子的初遇
+export interface Post extends PostMeta {
+  contentHtml: string;
+}
 
-飞机落地双流机场，成都的空气里就带着若有若无的花椒味。放下行李直奔宽窄巷子，在这片老街里寻找第一顿正餐。
-
-**推荐：市井火锅** — 牛油锅底翻滚着红浪，毛肚七上八下的口感至今难忘。
-
-## Day 2：玉林路的小馆子
-
-赵雷唱的玉林路，果然藏着无数好味道。
-
-- **串串香**：竹签在锅里起舞，蘸上干碟，一口一个停不下来
-- **甜水面**：粗面条裹着红油和芝麻酱，甜与辣的碰撞
-- **冰粉**：饭后必来一碗，红糖水的甜蜜化解了所有辣意
-
-## Day 3：人民公园的慢生活
-
-一碗盖碗茶，一盘钟水饺，在人民公园的茶铺里坐了一个下午。成都教会我的最重要的事——**慢下来，才品得出味道**。`,
-  },
-  {
-    slug: "osaka-street-food",
-    title: "大阪街头美食：天下厨房的味觉冒险",
-    date: "2026-04-15",
-    location: "大阪",
-    excerpt:
-      "道顿堀的霓虹灯下，章鱼烧在铁板上滋滋作响。大阪自称「天下的厨房」，名不虚传——从黑门市场的海鲜到新世界的串カツ，每一口都是惊喜。",
-    coverImage: "/images/osaka.jpg",
-    tags: ["日料", "街头小吃", "章鱼烧"],
-    content: `## Day 1：道顿堀的诱惑
-
-大阪的第一站必须是道顿堀。巨大的格力高跑步人招牌下，美食的香气从四面八方涌来。
-
-**章鱼烧** — 外酥内软，一颗入口，章鱼的弹牙配上酱汁和柴鱼片，绝了。
-
-## Day 2：黑门市场的清晨
-
-早起去黑门市场，这里是吃货的天堂。
-
-- **海鲜刺身**：金枪鱼大腹入口即化，甜虾的鲜甜在舌尖绽放
-- **和牛串**：A5和牛在炭火上滋滋作响，油脂的香气让人沉醉
-- **抹茶甜品**：浓郁抹茶配红豆，是完美的收尾
-
-## Day 3：新世界的串カツ
-
-通天阁下的新世界，充满昭和气息。串カツ蘸酱只能蘸一次——这是大阪的规矩，也是对美味的尊重。`,
-  },
-  {
-    slug: "guangzhou-morning-tea",
-    title: "广州早茶：一盅两件的悠然时光",
-    date: "2026-03-08",
-    location: "广州",
-    excerpt:
-      "虾饺晶莹剔透，肠粉薄如蝉翼。广州人的早晨从一壶普洱和几笼点心开始，这不仅仅是一顿早餐，更是一种传承百年的生活方式。",
-    coverImage: "/images/guangzhou.jpg",
-    tags: ["早茶", "粤菜", "点心"],
-    content: `## 老字号：陶陶居
-
-广州早茶的朝圣地。一壶菊普，几笼点心，看老广们翻着报纸聊着天，时间在这里慢得刚刚好。
-
-**必点清单：**
-- 虾饺皇 — 皮薄馅大，一整颗虾仁的弹牙
-- 凤爪 — 豉汁蒸得软烂入味
-- 肠粉 — 薄透如纸，配上甜酱油，简单却惊艳
-- 叉烧包 — 掰开的瞬间，蜜汁叉烧的香气扑面而来
-
-## 西关老街的牛杂
-
-走出茶楼，拐进西关老街。一碗萝卜牛杂，汤汁浓郁，牛杂软烂，萝卜吸饱了味道。这才是广州的市井味道。
-
-## 沙面的下午茶
-
-在沙面的老洋房旁，一杯鸳鸯奶茶配蛋挞，中西交融的滋味，正如广州这座城市本身。`,
-  },
-];
-
-export function getAllPosts(): Post[] {
+export function getAllPosts(): PostMeta[] {
+  const fileNames = fs.readdirSync(postsDirectory);
+  const posts = fileNames
+    .filter((f) => f.endsWith(".md"))
+    .map((fileName) => {
+      const slug = fileName.replace(/\.md$/, "");
+      const fullPath = path.join(postsDirectory, fileName);
+      const fileContents = fs.readFileSync(fullPath, "utf8");
+      const { data } = matter(fileContents);
+      return {
+        slug,
+        title: data.title || "",
+        date: data.date || "",
+        location: data.location || "",
+        excerpt: data.excerpt || "",
+        coverImage: data.coverImage || "",
+        tags: data.tags || [],
+      };
+    });
   return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
-export function getPostBySlug(slug: string): Post | undefined {
-  return posts.find((p) => p.slug === slug);
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const fullPath = path.join(postsDirectory, `${slug}.md`);
+  if (!fs.existsSync(fullPath)) return null;
+
+  const fileContents = fs.readFileSync(fullPath, "utf8");
+  const { data, content } = matter(fileContents);
+
+  const processed = await remark().use(html).process(content);
+  const contentHtml = processed.toString();
+
+  return {
+    slug,
+    title: data.title || "",
+    date: data.date || "",
+    location: data.location || "",
+    excerpt: data.excerpt || "",
+    coverImage: data.coverImage || "",
+    tags: data.tags || [],
+    contentHtml,
+  };
+}
+
+export function getAllSlugs(): string[] {
+  const fileNames = fs.readdirSync(postsDirectory);
+  return fileNames.filter((f) => f.endsWith(".md")).map((f) => f.replace(/\.md$/, ""));
 }

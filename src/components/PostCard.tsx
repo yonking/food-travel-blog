@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Post } from "@/lib/posts";
+import { PostMeta } from "@/lib/posts";
 
-export default function PostCard({ post }: { post: Post }) {
+export default function PostCard({ post }: { post: PostMeta }) {
   return (
     <Link href={`/posts/${post.slug}`} className="group block">
       <article className="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:shadow-lg hover:shadow-orange-100 dark:hover:shadow-orange-900/20 transition-all duration-300 hover:-translate-y-1">
