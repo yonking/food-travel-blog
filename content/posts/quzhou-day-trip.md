@@ -1,6 +1,6 @@
 ---
 title: 衢州一日逛吃游记：赴一场烟火与辣味之约
-date: '2026-06-14'
+date: '2026-06-07'
 location: 衢州
 excerpt: 衢州游记，吃鸭头逛松园菜场。
 coverImage: ''
