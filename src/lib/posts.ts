@@ -51,6 +51,15 @@ export function getAllPosts(): PostMeta[] {
   return posts.sort((a, b) => (a.date > b.date ? -1 : 1));
 }
 
+/** Remove the first markdown image that matches the given URL */
+function stripCoverImageFromContent(content: string, coverUrl: string): string {
+  if (!coverUrl) return content;
+  // Remove the first ![alt](coverUrl) occurrence
+  const escaped = coverUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`!\\[[^\\]]*\\]\\(${escaped}\\)\\s*`);
+  return content.replace(regex, "");
+}
+
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   const fullPath = path.join(postsDirectory, `${slug}.md`);
   if (!fs.existsSync(fullPath)) return null;
@@ -58,11 +67,15 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   const fileContents = fs.readFileSync(fullPath, "utf8");
   const { data, content } = matter(fileContents);
 
-  const processed = await remark().use(html).process(content);
-  const contentHtml = processed.toString();
-
   // Use coverImage from frontmatter, fallback to first image in content
   const coverImage = data.coverImage || extractFirstImage(content) || "";
+
+  // If cover image comes from content, remove it from body to avoid duplication
+  const isCoverFromBody = !data.coverImage && coverImage;
+  const processedContent = isCoverFromBody ? stripCoverImageFromContent(content, coverImage) : content;
+
+  const processed = await remark().use(html).process(processedContent);
+  const contentHtml = processed.toString();
 
   return {
     slug,
